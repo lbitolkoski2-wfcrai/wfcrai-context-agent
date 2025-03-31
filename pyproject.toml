@@ -1,0 +1,10 @@
+[project]
+name = "wfcrai-context-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "agent-utils>=0.1.0",
+    "langgraph>=0.3.21",
+]
