@@ -5,6 +5,20 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "agent-utils>=0.1.0",
+    "atlassian-python-api>=4.0.3",
+    "dotenv>=0.9.9",
+    "fastapi>=0.115.12",
+    "google-cloud-alloydb>=0.4.5",
+    "google-cloud-alloydb-connector[pg8000]>=1.7.0",
+    "google-cloud-bigquery>=3.31.0",
+    "langfuse>=2.60.2",
     "langgraph>=0.3.21",
+    "toml>=0.10.2",
+    "openai>=1.65.0",
+    "wfcrai-agent-utils",
+    "google-cloud-storage>=3.1.0",
+    "uvicorn>=0.34.0",
 ]
+
+[tool.uv.sources]
+wfcrai-agent-utils = { path = "./wfcrai_agent_utils-0.1.0-py3-none-any.whl" }

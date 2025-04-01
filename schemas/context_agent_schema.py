@@ -15,11 +15,12 @@ class SummarizeEmail(BaseModel):
     summary: str
     user_reasoning: str
 
-class ConfluenceContext:
-    """
-    ConfluenceContext Schema
-    """
-    confluence_page: str
-    confluence_page_id: str
-    type: str # [dataset,table]
-    
+
+class EmailContent(BaseModel):
+    request_id: str
+    request_inqueue_type: str
+    request_inqueue_details: str
+    requestor_email: str
+    request_subject: str
+    request_body: str
+    attachments: List[dict]

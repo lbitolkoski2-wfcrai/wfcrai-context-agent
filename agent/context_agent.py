@@ -3,9 +3,11 @@ from agent_utils.components.assistant import Assistant
 from langgraph.graph import StateGraph
 import schemas.context_agent_schema as context_agent_schema
 
-from nodes.org_context import OrgContext
+from agent.nodes.org_context import OrgContext
+from langfuse import Langfuse
+from langfuse.decorators import observe
 
-class AgentContext:
+class ContextAgent:
     """
     Populate shared context fiedl for all agents based on the incoming email
     Write the updated context to the inqueue in alloydb
@@ -24,19 +26,12 @@ class AgentContext:
         self.confluence_connector = ConfluenceConnector(self.config)
         self.llm_connector = LLMConnector(self.config, "openai")
 
-    async def compile_execution_graph(self,ctx):
+    def compile_execution_graph(self):
         schema = context_agent_schema.ContextAgent
         graph_builder = StateGraph(schema)
 
         org_context_node = OrgContext(self)
-
-        graph_builder.add_node("start", lambda ctx: ctx)
         graph_builder.add_node("org_context", org_context_node.run)
-        graph_builder.add_node("end", lambda ctx: ctx)
-
-        graph_builder.add_edge("start", "org_context")
-        graph_builder.add_edge("org_context", "end")
-
-        graph_builder.set_entry_point("start")
+        graph_builder.set_entry_point("org_context")
         agent_graph = graph_builder.compile()
         return agent_graph

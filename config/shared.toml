@@ -1,0 +1,22 @@
+#Shared General Configuration Parameters
+
+[confluence]
+[confluence.connector]
+dataset_label = "gcp-dataset"
+table_label = "gcp-table"
+base_url = "https://woolworths-agile.atlassian.net/"
+space_name = "WFCR"
+root_page_id = "33206304974"
+
+[bigquery]
+valid_datasets = ["ada", "bunch", "customer", "product", "sales"]
+project_id = "gcp-wow-food-fco-auto-dev"
+region = "region-us"
+
+[llm_connector]
+connector_type="openai" # openai or gemini
+[llm_connector.openai]
+deployment = "wfc-assistant-global"  # Azure deployment name
+api_version = "2025-03-01-preview"
+[llm_connector.gemini]
+name = "Gemini"

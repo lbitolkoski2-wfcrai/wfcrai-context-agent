@@ -1,6 +1,6 @@
 # Variables
 CONFIG_DIR := ./config
-GCS_BUCKET := gs://wfcrai-agents/data-agent
+GCS_BUCKET := gs://wfcrai-agents/context-agent
 
 # Find all prompt .toml files in the config directory
 TOML_FILES := $(shell find $(CONFIG_DIR)/prompts -name '*.toml' ! -name 'bundled.toml')
@@ -23,7 +23,7 @@ bundle: $(TOML_FILES)
 .PHONY: utils
 utils:
 	@echo "Building agent_utils..."
-	@cd ../wfcrai-agent-utils && uv build
+	@cd ../wfcrai-agent-utils && rm ./dist/*.whl && uv build
 	@echo "Copying the built .whl file from agent_utils..."
 	@cp ../wfcrai-agent-utils/dist/*.whl .
 	@echo "Installing agent_utils into the current project..."
