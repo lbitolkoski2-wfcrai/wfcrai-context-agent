@@ -1,8 +1,7 @@
 from agent_utils.connectors import ConfluenceConnector, BigQueryConnector, LLMConnector, GoogleCloudStorageConnector
 from agent_utils.components.assistant import Assistant
 from langgraph.graph import StateGraph
-import schemas.context_agent_schema as context_agent_schema
-
+from schemas.models import ContextAgentState
 from agent.nodes.org_context import OrgContext
 # from langfuse.decorators import observe
 
@@ -26,7 +25,7 @@ class ContextAgent:
         self.llm_connector = LLMConnector(self.config, "openai")
 
     def compile_execution_graph(self):
-        schema = context_agent_schema.ContextAgent
+        schema = ContextAgentState
         graph_builder = StateGraph(schema)
 
         org_context_node = OrgContext(self)

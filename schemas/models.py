@@ -1,12 +1,23 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-class ContextAgent(BaseModel):
+class ContextAgentState(BaseModel):
     """
     ContextAgent StateGraph LangGraph Schema
     """
     email_context: dict
     agent_context: dict
+
+    @property
+    def format_org_context(self):
+        return {
+            "region_id": self.agent_context["org_context"]["region"],
+            "area_id": self.agent_context["org_context"]["area"],
+            "org_id": self.agent_context["org_context"]["cost_centre_desc"],
+            "context": {
+                "department_context": self.agent_context["org_context"]["department_context"],
+            }
+        }
 
 class SummarizeEmail(BaseModel):
     """
@@ -24,6 +35,7 @@ class EmailContent(BaseModel):
     request_subject: str
     request_body: str
     attachments: List[dict]
+
 
 class ContextAgentResponse(BaseModel):
     org_id: str
