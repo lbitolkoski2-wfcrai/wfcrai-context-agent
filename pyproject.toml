@@ -15,10 +15,7 @@ dependencies = [
     "langgraph>=0.3.21",
     "toml>=0.10.2",
     "openai>=1.65.0",
-    "wfcrai-agent-utils",
     "google-cloud-storage>=3.1.0",
     "uvicorn>=0.34.0",
 ]
 
-[tool.uv.sources]
-wfcrai-agent-utils = { path = "./wfcrai_agent_utils-0.1.0-py3-none-any.whl" }

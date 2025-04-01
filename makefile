@@ -30,16 +30,17 @@ utils:
 	@uv pip install *.whl
 	@echo "Done adding and installing agent_utils."
 
+DOCKER_IMAGE := context-agent:latest
+ARTIFACT_REGISTRY := us-central1-docker.pkg.dev/gcp-wow-food-fco-auto-dev/wfcrai-agents
+
 .PHONY: push # Push to artifact registry
-push: push 
-	@echo "Building docker image locally as data-agent:latest..."
-	@docker build . -t data-agent:latest
-	@docker tag data-agent:latest us-central1-docker.pkg.dev/gcp-wow-food-fco-auto-dev/gae-standard/data-agent:latest
+push: build
+	@echo "Tagging Docker image as $(ARTIFACT_REGISTRY)/$(DOCKER_IMAGE)..."
+	@docker tag $(DOCKER_IMAGE) $(ARTIFACT_REGISTRY)/$(DOCKER_IMAGE)
 	@echo "Pushing the Docker image to Artifact Registry..."
-	@docker push us-central1-docker.pkg.dev/gcp-wow-food-fco-auto-dev/gae-standard/data-agent:latest
+	@docker push $(ARTIFACT_REGISTRY)/$(DOCKER_IMAGE)
 
 .PHONY: build # Build the docker image
-build: build
-	@echo "Building docker image locally as data-agent:latest..."
-	@docker build . -t data-agent:latest
-	@docker tag data-agent:latest us-central1-docker.pkg.dev/gcp-wow-food-fco-auto-dev/gae-standard/data-agent:latest
+build:
+	@echo "Building Docker image locally as $(DOCKER_IMAGE)..."
+	@docker build . -t $(DOCKER_IMAGE)

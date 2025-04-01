@@ -13,7 +13,7 @@ import uuid
 import logging
 
 from schemas.context_agent_schema import EmailContent
-from langfuse.decorators import observe, langfuse_context
+# from langfuse.decorators import observe, langfuse_context
 
 app = FastAPI()
 context_agent = ContextAgent()

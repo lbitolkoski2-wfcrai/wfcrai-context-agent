@@ -4,8 +4,7 @@ from langgraph.graph import StateGraph
 import schemas.context_agent_schema as context_agent_schema
 
 from agent.nodes.org_context import OrgContext
-from langfuse import Langfuse
-from langfuse.decorators import observe
+# from langfuse.decorators import observe
 
 class ContextAgent:
     """

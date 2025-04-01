@@ -1,5 +1,5 @@
 import agent_utils.connectors.bq_connector as bq_connector
-from langfuse.decorators import observe, langfuse_context
+# from langfuse.decorators import observe, langfuse_context
 class OrgContext:
     """"
     pull organizational context from the email, (from,to) | job title, department etc"
@@ -31,7 +31,7 @@ class OrgContext:
         """
         pass
 
-    @observe
+    # @observe
     async def run(self, ctx):
         """
         pull organizational context from the email, (from,to) | job title, department etc
