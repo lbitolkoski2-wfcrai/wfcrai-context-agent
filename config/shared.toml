@@ -9,6 +9,7 @@ space_name = "WFCR"
 root_page_id = "33206304974"
 
 [bigquery]
+org_context_table = "agent_context.hmn"
 valid_datasets = ["ada", "bunch", "customer", "product", "sales"]
 project_id = "gcp-wow-food-fco-auto-dev"
 region = "region-us"

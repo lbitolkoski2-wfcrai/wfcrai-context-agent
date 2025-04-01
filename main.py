@@ -12,7 +12,7 @@ import json
 import uuid
 import logging
 
-from schemas.context_agent_schema import EmailContent
+from schemas.context_agent_schema import EmailContent, ContextAgentResponse
 # from langfuse.decorators import observe, langfuse_context
 
 app = FastAPI()
@@ -38,7 +38,33 @@ async def data_request(request: fastapi_request):
     }
     # Execution of the LangGraph graph
     context_agent_result = await context_agent_graph.ainvoke(context_agent_state)
-    return context_agent_result
+    response = validate_and_format_result(context_agent_result)
+    return response
+
+@app.post("/bulk_confluence_context")
+async def bulk_confluence_context(request: fastapi_request):
+    return {"status": "up!"}
+
+
+def validate_and_format_result(result):
+    """
+    Validate the response from the context agent
+    """
+    response = {
+        "region_id": result["agent_context"]["org_context"]["region"],
+        "area_id": result["agent_context"]["org_context"]["area"],
+        "org_id": result["agent_context"]["org_context"]["cost_centre_desc"],
+        "context": {
+            "department_context": result["agent_context"]["org_context"]["department_context"],
+        }
+    }
+
+    try:
+        formatted_response = dict(ContextAgentResponse(**response))
+    except ValueError as e:
+        return {"error": "Validation error in agent response"}
+    return formatted_response
+
 
 @app.get("/")
 def health_check():

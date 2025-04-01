@@ -7,7 +7,7 @@ class OrgContext:
     def __init__(self, agent):
         self.bq_connector = agent.bq_connector
         # self.person_view = agent.config['org_context']['person_view']
-        self.person_view = 'agent_context.org_context_v'
+        self.person_view = agent.config['bigquery']['org_context_table']
         self.assistant = agent.assistant
         pass
 
@@ -15,7 +15,7 @@ class OrgContext:
         """
         get raw user information from bigquery
         """
-        query = f"SELECT * FROM {self.person_view} WHERE user_email = '{email}'"
+        query = f"SELECT CAST(FROM_BASE64(encoded_address) as STRING) as user_email, * EXCEPT (encoded_address) FROM {self.person_view} WHERE CAST(FROM_BASE64(encoded_address) as STRING) = '{email}'"
         try:
             result = self.bq_connector.execute_query(query)
             result_dict = [dict(row) for row in result]

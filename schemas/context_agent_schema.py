@@ -24,3 +24,9 @@ class EmailContent(BaseModel):
     request_subject: str
     request_body: str
     attachments: List[dict]
+
+class ContextAgentResponse(BaseModel):
+    org_id: str
+    region_id: str
+    area_id: str
+    context: dict
