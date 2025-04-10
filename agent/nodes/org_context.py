@@ -1,4 +1,6 @@
-import agent_utils.connectors.bq_connector as bq_connector
+import logging
+from schemas.context_agent_schema import PersonContext
+import os
 # from langfuse.decorators import observe, langfuse_context
 class OrgContext:
     """"
@@ -6,8 +8,7 @@ class OrgContext:
     """
     def __init__(self, agent):
         self.bq_connector = agent.bq_connector
-        # self.person_view = agent.config['org_context']['person_view']
-        self.person_view = 'agent_context.org_context_v'
+        self.person_view = "agent_context.hmn"
         self.assistant = agent.assistant
         pass
 
@@ -15,15 +16,25 @@ class OrgContext:
         """
         get raw user information from bigquery
         """
-        query = f"SELECT * FROM {self.person_view} WHERE user_email = '{email}'"
+        query = f"SELECT * FROM {self.person_view} WHERE (CAST(FROM_BASE64(encoded_address) as STRING)) = '{email}'"
         try:
             result = self.bq_connector.execute_query(query)
             result_dict = [dict(row) for row in result]
             if not result_dict:
-                raise ValueError(f"No user information found for email: {email}")
-            return result_dict[0]
+                logging.error(f"User {email} not found in person context")
+            result_dict[0]['email'] = result_dict[0]['encoded_address']
+            person = PersonContext(**{
+                "org_id": result_dict[0]['cost_centre_desc'],
+                "region_id": result_dict[0]['region'],
+                "area_id": result_dict[0]['area'],
+                "context": {
+                    "department_context": result_dict[0]['department_context']
+                }
+            })
+            return person
         except Exception as e:
-            raise RuntimeError(f"Failed to fetch user information for email: {email}. Error: {str(e)}")
+            logging.info(f"Error fetching user information from BigQuery: %s", e)
+            return PersonContext()
     
     async def summarize_user_info(self, ctx):
         """
@@ -38,5 +49,5 @@ class OrgContext:
         """
         from_email = ctx.email_context['requestor_email']
         from_user = await self.get_user_info(from_email)
-        ctx.agent_context['org_context'] = from_user
+        ctx.agent_context['org_context'] = from_user.model_dump()
         return ctx

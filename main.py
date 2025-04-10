@@ -7,6 +7,7 @@ from agent.context_agent import ContextAgent
 from fastapi import FastAPI, Request as fastapi_request
 import dotenv
 dotenv.load_dotenv()
+import uvicorn
 
 import json
 import uuid
@@ -19,16 +20,15 @@ app = FastAPI()
 context_agent = ContextAgent()
 context_agent_graph = context_agent.compile_execution_graph()
 
-
+logging.basicConfig(level=logging.INFO)
 @app.post("/process_email_content")
 async def data_request(request: fastapi_request):
     #Verify the request body against the EmailContent schema
     request_json = await request.json()  # Pull email context from request
     try:
-        email_content = EmailContent(**request_json) 
-        email_content = dict(email_content)
+        email_content = EmailContent(**request_json).model_dump() 
     except ValueError as e:
-        logging.error("Data Agent | Invalid request body: " + str(e))
+        logging.error("error validating email content: " + str(e))
         return {"error": "Invalid request body"}
 
     logging.info("Data Agent | processing job:" + str(email_content))
@@ -38,13 +38,12 @@ async def data_request(request: fastapi_request):
     }
     # Execution of the LangGraph graph
     context_agent_result = await context_agent_graph.ainvoke(context_agent_state)
-    return context_agent_result
+    return context_agent_result['agent_context']
 
 @app.get("/")
 def health_check():
     return {"status": "Okay!"}
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
