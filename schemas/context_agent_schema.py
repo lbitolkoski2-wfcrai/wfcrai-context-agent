@@ -28,4 +28,4 @@ class EmailContent(BaseModel):
     requestor_email: str
     request_subject: Optional[str] = ""
     request_body: str
-    attachments: Optional [List[str]] = []
+    attachments: Optional [List[dict]] = []
