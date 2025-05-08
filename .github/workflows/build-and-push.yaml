@@ -1,0 +1,84 @@
+name: Build and Push to GAR - Context Agent
+run-name: "Building tag: ${{ github.event.inputs.image_tag }} on ${{ github.ref_name }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Docker image tag"
+        required: true
+        default: "latest"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      GCP_PROJECT_ID: "gcp-wow-food-wfc-ai-dev"
+      GAR_REPOSITORY: "wfc-ai-gar"
+      GAR_LOCATION: "us-central1"
+      IMAGE_NAME: "context-agent"
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: 'projects/313105558650/locations/global/workloadIdentityPools/github-action-pool/providers/github-action-provider'
+          service_account: 'wfc-ai-github-sa@gcp-wow-food-wfc-ai-dev.iam.gserviceaccount.com'
+
+
+      - name: Login to GCR
+        id: docker-auth
+        uses: docker/login-action@v3
+        with:
+          username: 'oauth2accesstoken'
+          password: ${{ steps.auth.outputs.access_token }}
+          registry: ${{ env.GAR_LOCATION }}-docker.pkg.dev
+
+      - name: Build Docker image
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}"
+          echo "Building image: $IMAGE:${{ github.event.inputs.image_tag }}"
+          docker build \
+            --secret id=adc,src=${{ steps.auth.outputs.credentials_file_path }} \
+            -f dockerfile \
+            -t "$IMAGE:${{ github.event.inputs.image_tag }}" .
+          docker tag "$IMAGE:${{ github.event.inputs.image_tag }}" "$IMAGE:latest"
+          BRANCH_TAG=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's#[/ ]#-_#g')
+          docker tag "$IMAGE:${{ github.event.inputs.image_tag }}" "$IMAGE:$BRANCH_TAG"
+          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          docker tag "$IMAGE:${{ github.event.inputs.image_tag }}" "$IMAGE:$SHORT_SHA"
+          echo "Tagged image: input=${{ github.event.inputs.image_tag }}, latest, branch=$BRANCH_TAG, sha=$SHORT_SHA"
+
+      - name: Push Docker image
+        run: |
+          IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}"
+          BRANCH_TAG=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's#[/ ]#-_#g')
+          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          echo "Pushing images: tag=${{ github.event.inputs.image_tag }}, latest, branch=$BRANCH_TAG, sha=$SHORT_SHA"
+          docker push "$IMAGE:${{ github.event.inputs.image_tag }}"
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:$BRANCH_TAG"
+          docker push "$IMAGE:$SHORT_SHA"
+
+      - name: Add build tags to job summary
+        run: |
+          IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}"
+          BRANCH_TAG=$(echo "${GITHUB_REF#refs/heads/}" | tr '[:upper:]' '[:lower:]' | sed 's#[/ ]#-_#g')
+          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          echo "## Docker Image Tags" >> $GITHUB_STEP_SUMMARY
+          echo "- Input Tag: $IMAGE:${{ github.event.inputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Latest Tag: $IMAGE:latest" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch Tag: $IMAGE:$BRANCH_TAG" >> $GITHUB_STEP_SUMMARY
+          echo "- Short SHA Tag: $IMAGE:$SHORT_SHA" >> $GITHUB_STEP_SUMMARY
