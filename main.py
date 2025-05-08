@@ -15,7 +15,7 @@ dotenv.load_dotenv()
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 
-@app.post("/generate_task_context")
+@app.post("/context")
 async def generate_task_context(request: fastapi_request):
     request_json = await request.json()
     try:
@@ -43,5 +43,5 @@ def health_check():
     return {"status": "Okay!"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
 

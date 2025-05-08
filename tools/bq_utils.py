@@ -1,11 +1,13 @@
 # from google.cloud import bigquery
-from constants import GCP_PROJECT, GCP_LOCATION, MODEL
-
-from agent_utils.connectors import BigQueryConnector
+# from constants import GCP_PROJECT, GCP_LOCATION
+from google.cloud import bigquery
+# from agent_utils.connectors import BigQueryConnector
 
 import logging
 
 from schemas.context_agent_schema import PersonContextInput, EmailContentInput
+
+bq_client = bigquery.Client()
 
 def get_sender_context(requestor_email: str) -> PersonContextInput:
     """
@@ -16,16 +18,16 @@ def get_sender_context(requestor_email: str) -> PersonContextInput:
     Returns:
         PersonContext: the context of the requestor
     """
-    config = {
-        "bigquery": {
-            "project_id": GCP_PROJECT,
-            "region": GCP_LOCATION,
-        }
-    }
-    bq_connector = BigQueryConnector(config=config)
+    # config = {
+    #     "bigquery": {
+    #         "project_id": GCP_PROJECT,
+    #         "region": GCP_LOCATION,
+    #     }
+    # }
+    # bq_connector = BigQueryConnector(config=config)
     query = f"SELECT * FROM test.person_context WHERE employee_corporate_email = '{requestor_email}'"
     try:
-        result = bq_connector.execute_query(query)
+        result = bq_client.query_and_wait(query)
         rows = [dict(row) for row in result]
         logging.info(f"Query result: {rows}")
         if not rows:
