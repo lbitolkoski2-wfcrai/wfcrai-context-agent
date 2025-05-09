@@ -39,7 +39,7 @@ class Agents(str, Enum):
     """
     DATA_AGENT = "data_agent"
     CSA_AGENT = "csa_agent"
-    DUMMY_AGENT = "dummy_agent"
+    UNSUPPORTED = "unsupported"
 
 class Priority(str, Enum):
     """
@@ -53,7 +53,7 @@ class Priority(str, Enum):
 class RoutingAgentContext(BaseModel):
     target_agent: Agents
     agent_tags: Optional[List[str]] = []
-    priority: Priority = Priority.MEDIUM
+    priority: Priority = Priority.LOW
 
 class ContextAgentResponse(RoutingAgentContext, TaskContext):
     """

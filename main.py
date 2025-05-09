@@ -28,9 +28,9 @@ async def generate_task_context(request: fastapi_request):
     sender_context = get_sender_context(email_content.requestor_email)    
     task_content = TaskContent(email_content=email_content, person_context=sender_context)
     task_context_response = generate_genric_task_context(task_content)
-    logging.info(f"Context agent | task context: {type(task_context_response)}")
+    logging.info(f"Context agent | task context: {task_context_response.model_dump()}")
     routing_agent_response = generate_routing_agent_context(task_content=task_content, task_context=task_context_response)
-    logging.info(f"Context agent | routing agent response: {type(routing_agent_response)}")
+    logging.info(f"Context agent | routing agent response: {routing_agent_response.model_dump()}")
 
     # Combine the task context and routing agent response into a single response
     task_context_response_dict = task_context_response.model_dump()
