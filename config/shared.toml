@@ -20,3 +20,12 @@ deployment = "wfc-assistant-global"  # Azure deployment name
 api_version = "2025-03-01-preview"
 [llm_connector.gemini]
 name = "Gemini"
+
+[integration_config]
+[integration_config."gmail.wfcrdata"]
+mode  = "fixed"
+agent = "data_agent"
+
+[integration_config."gmail.policy"]
+mode  = "fixed"
+agent = "policy_agent"
