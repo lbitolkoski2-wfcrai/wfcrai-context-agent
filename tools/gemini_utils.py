@@ -1,12 +1,23 @@
 from google import genai
 from dotenv import load_dotenv
 from constants import MODEL
-from pydantic import BaseModel
+from pathlib import Path
+import tomllib
 from schemas.context_agent_schema import TaskContent, TaskContext, RoutingAgentContext
+import logging
 
 load_dotenv()
-
 client = genai.Client()
+
+# --- NEW: load shared.toml/integration_config ---
+CONFIG_PATH = Path(__file__).parent.parent / "config" / "shared.toml"
+try:
+    with open(CONFIG_PATH, "rb") as f:
+        _SHARED = tomllib.load(f)
+except FileNotFoundError:
+    _SHARED = {}
+INTEGRATION_CONFIG = _SHARED.get("integration_config", {})
+print(f"Loaded integration_config: {INTEGRATION_CONFIG}")
 
 
 def generate_genric_task_context(task_context_input: TaskContent) -> TaskContext:
@@ -19,9 +30,27 @@ def generate_genric_task_context(task_context_input: TaskContent) -> TaskContext
     """
     task_context_dict = task_context_input.model_dump()
     PROMPT = f"""
-    You are a task context agent. Your job is to generate a summary of the task context object based on the output schema.
-    DO NOT include any sensitive information like phone number or address at all. But include the title, department details. 
-    The task context object is: {task_context_dict}.The summary should be concise and to the point."""
+    You are a Task Context Agent. Your primary function is to generate a concise summary from a provided task context object.
+
+    **Instructions for Summary Generation:**
+
+    1.  **Input:** You will receive a task context object: `{task_context_dict}`.
+    2.  **Core Task:** Summarize this object.
+    3.  **Information to INCLUDE:**
+        * The task's title.
+        * Relevant department details (e.g., department name, team, section).
+    4.  **Information to EXCLUDE (Strictly):**
+        * DO NOT include any sensitive Personally Identifiable Information (PII). This includes, but is not limited to:
+            * Phone numbers
+            * Physical addresses (street, city, zip code, country, etc.)
+            * Email addresses
+            * (Consider if other items like full names of individuals, specific financial data, etc., should also be excluded based on your definition of "sensitive" for this task).
+    5.  **Style & Tone:**
+        * The summary must be **concise** and **to the point**.
+        * Maintain a professional and factual tone.
+    6.  **Output Format:**
+        * Present the summary in a clear, readable text format. 
+    """
 
     response = client.models.generate_content(
         model=MODEL,
@@ -40,33 +69,21 @@ def generate_routing_agent_context(
     """
     Determine which agent should handle the task based on the task context.
     """
-    integration_source = task_content.email_content.integration_source
-
-    # TODO: load this from env or a config file
-    integration_config = {
-        "gmail.wfcrdata": {"mode": "fixed", "agent": "data_agent"},
-        "gmail.policy": {"mode": "fixed", "agent": "policy_agent"},
-        "custom.system": {
-            "mode": "infer",
-            "prompt": """
-        You are the routing agent for Custom System. Your job is to determine which agent should handle the task based on the task content and context.
-        Given the following task content and context, output the RoutingAgentContext JSON:
-        Task content: {task_content_dump}
-        Task context: {task_context_dump}""",
-        },
-    }
-
-    cfg = integration_config.get(integration_source)
+    src = task_content.email_content.integration_source
+    cfg = INTEGRATION_CONFIG.get(src)
     if cfg:
+        logging.info(f"Routing agent | integration config: {cfg}")
         if cfg["mode"] == "fixed":
-            target_agent = cfg["agent"]
-            # --- new: call LLM to pick a priority tag ---
+            target = cfg["agent"]
             priority_prompt = f"""
-        You are a task‐priority agent. Task context: {task_context.model_dump()}. The task will be handled by agent '{target_agent}'.
-        Leave tags an empty list.
-        If the person is in senior management, choose 'very_high' or 'high'. Otherwise choose 'medium' or 'low'.
-        Response according to the output schema."""
-            resposne = client.models.generate_content(
+You are a task‐priority agent. Task context: {task_context.model_dump()}. \
+The task will be handled by agent '{target}'.
+Leave tags an empty list.
+If the person is in senior management, choose 'very_high' or 'high'. \
+Otherwise choose 'medium' or 'low'.
+Response according to the output schema.
+"""
+            resp = client.models.generate_content(
                 model=MODEL,
                 contents=priority_prompt,
                 config={
@@ -74,21 +91,13 @@ def generate_routing_agent_context(
                     "response_schema": RoutingAgentContext,
                 },
             )
-            return resposne.parsed
+            return resp.parsed
 
         elif cfg["mode"] == "infer":
-            # use per‐integration prompt if present, else fallback
-            tmpl = cfg.get("prompt")
-            prompt = (
-                tmpl.format(
-                    task_content_dump=task_content.model_dump(),
-                    task_context_dump=task_context.model_dump(),
-                )
-                if tmpl
-                else f"""You are a task routing agent.
-            Task content: {task_content.model_dump()}
-            Task context: {task_context.model_dump()}
-            Determine which agent to call and return a RoutingAgentContext JSON."""
+            tmpl = cfg.get("prompt", "")
+            prompt = tmpl.format(
+                task_content_dump=task_content.model_dump(),
+                task_context_dump=task_context.model_dump(),
             )
             resp = client.models.generate_content(
                 model=MODEL,
@@ -100,24 +109,9 @@ def generate_routing_agent_context(
             )
             return resp.parsed
 
-    # fallback to generic LLM routing
-    # default_prompt = f"""You are a task routing agent.
-    # Task content: {task_content.model_dump()}
-    # Task context: {task_context.model_dump()}
-    # Determine which agent to call and return according to the output schema."""
-    # resp = client.models.generate_content(
-    #     model=MODEL,
-    #     contents=default_prompt,
-    #     config={
-    #         "response_mime_type": "application/json",
-    #         "response_schema": RoutingAgentContext,
-    #     },
-    # )
+    # fallback
     return RoutingAgentContext(
         target_agent="unsupported",
         agent_tags=[],
         priority="low",
     )
-
-
-#     )

@@ -1,5 +1,5 @@
 # from google.cloud import bigquery
-# from constants import GCP_PROJECT, GCP_LOCATION
+from constants import GCP_PROJECT, GCP_LOCATION
 from google.cloud import bigquery
 # from agent_utils.connectors import BigQueryConnector
 
