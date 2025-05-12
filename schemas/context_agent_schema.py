@@ -7,18 +7,23 @@ class PersonContextInput(BaseModel):
     # org_id: Optional[str] = ""
     area: Optional[str] = Field(
         description="area of the requestor in",
+        default="",
     )
     region: Optional[str] = Field(
         description="region of the requestor in",
+        default="",
     )
     ops_or_support: Optional[str] = Field(
         description="ops or support of the requestor in",
+        default="",
     )
     department_context: Optional[str] = Field(
         description="department context of the requestor in",
+        default="",
     )
     area_count: Optional[int] = Field(
         description="count of the people of the area",
+        default="",
     )
     # context: Optional[str] = ""
 
@@ -46,7 +51,7 @@ class EmailContentInput(BaseModel):
         description="integration source",
         examples = ["gmail.wfcrdata", "gmail.policy"],
     )
-    attachments: List[str] = Field(
+    attachments: List[dict] = Field(
         description="attachments of the email request",
     )
 
@@ -61,18 +66,23 @@ class TaskContent(BaseModel):
 class TaskContext(BaseModel):
     request_micro_summary: str = Field(
         description="micro summary of the request",
+        default="",
     )
     request_context_summary: str = Field(
         description="summary of the request context",
+        default="",
     )
     request_context: str = Field(
         description="context of the request, excluding personal information of the requestor like name, email, address, number etc.",
+        default="",
     )
     requestor_context: str = Field(
         description="context of the requestor",
+        default="",
     )
     parsed_attachments: List[str] = Field(
-        description="parsed attachments of in the email request",
+        default_factory=list,
+        description="parsed attachments of the email request",
     )
 
 class Agents(str, Enum):
@@ -93,8 +103,8 @@ class Priority(str, Enum):
     LOW = "low"
 
 class RoutingAgentContext(BaseModel):
-    target_agent: Agents
-    agent_tags: Optional[List[str]] = []
+    target_agent: Agents = Agents.UNSUPPORTED
+    agent_tags: List[str] = Field(default_factory=list)
     priority: Priority = Priority.LOW
 
 class ContextAgentResponse(RoutingAgentContext, TaskContext):

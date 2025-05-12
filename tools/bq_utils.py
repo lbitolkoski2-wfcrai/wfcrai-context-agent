@@ -32,6 +32,7 @@ def get_sender_context(requestor_email: str) -> PersonContextInput:
         logging.info(f"Query result: {rows}")
         if not rows:
             logging.error(f"User {requestor_email} not found in person context")
+            return PersonContextInput()
         first_row = rows[0]
         person = PersonContextInput(**first_row)
         return person

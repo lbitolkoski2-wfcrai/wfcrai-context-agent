@@ -1,0 +1,22 @@
+[
+    {
+        "request_id": "f33d3783-41cc-4e53-9e42-54b2350f736b",
+        "request_inqueue_type": "email",
+        "request_inqueue_details": "wfcrdata@woolworths.com.au",
+        "requestor_email": "amandabardwellcomms@woolworths.com.au",
+        "request_subject": "From Amanda - F25 Q3 Sales Announcement - 1 May 2025",
+        "request_body": "Hi team, I have a short message to share about our Q3 sales announcement which was released to the market this morning. Please join me at our Group Town Hall (in-person at Norwest or via livestream) at",
+        "integration_source": "gmail.wfcrdata",
+        "attachments": []
+    },
+    {
+        "request_id": "fd4ebfac-0ce9-4aad-ac2c-044805942db6",
+        "request_inqueue_type": "email",
+        "request_inqueue_details": "wfcrdata@woolworths.com.au",
+        "requestor_email": "nchan3@woolworths.com.au",
+        "request_subject": "Lamb Basket Affinity Query",
+        "request_body": "In the last 52 weeks, what are the most commonly purchased products alongside beef and lamb? Nathan Chan Data Engineer M 0411 646 824 E nchan3@woolworths.com.au 1 Woolworths Way",
+        "integration_source": "gmail.wfcrdata",
+        "attachments": []
+    }
+]
