@@ -13,7 +13,7 @@ from tools.bq_utils import get_sender_context
 from tools.gemini_utils import generate_genric_task_context, generate_routing_agent_context
 dotenv.load_dotenv()
 app = FastAPI()
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 @app.post("/context")
 async def generate_task_context(request: fastapi_request):

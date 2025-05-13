@@ -146,7 +146,7 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
                     "response_schema": RoutingAgentContext,
                 },
             )
-            logging.debug(f"gemini response: {resp}")
+            logging.debug(f"gemini response: {resp.model_dump_json()}")
             return resp.parsed
 
         elif cfg["mode"] == "infer":
