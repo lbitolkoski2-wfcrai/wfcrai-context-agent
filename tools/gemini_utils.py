@@ -84,7 +84,7 @@ You are a Task Context Agent. Your primary function is to analyze a provided tas
 
 """
 
-    response = client.models.generate_content(
+    resp = client.models.generate_content(
         model=MODEL,
         contents=PROMPT,
         config={
@@ -92,7 +92,8 @@ You are a Task Context Agent. Your primary function is to analyze a provided tas
             "response_schema": TaskContext,
         },
     )
-    return response.parsed
+    logging.debug(f"gemini response: {resp.model_dump_json()}")
+    return resp.parsed
 
 
 def generate_routing_agent_context(
@@ -145,6 +146,7 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
                     "response_schema": RoutingAgentContext,
                 },
             )
+            logging.debug(f"gemini response: {resp}")
             return resp.parsed
 
         elif cfg["mode"] == "infer":
@@ -161,6 +163,7 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
                     "response_schema": RoutingAgentContext,
                 },
             )
+            logging.debug(f"gemini response: {resp.model_dump_json()}")
             return resp.parsed
 
     # fallback
