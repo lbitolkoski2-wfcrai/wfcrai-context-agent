@@ -1,10 +1,15 @@
-from google import genai
-from dotenv import load_dotenv
-from constants import MODEL
-from pathlib import Path
-import tomllib
-from schemas.context_agent_schema import TaskContent, TaskContext, RoutingAgentContext
 import logging
+import tomllib
+from pathlib import Path
+
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+from langfuse.decorators import langfuse_context, observe
+
+from constants import MODEL
+from schemas.context_agent_schema import (RoutingAgentContext, TaskContent,
+                                          TaskContext)
 
 load_dotenv()
 client = genai.Client()
@@ -17,10 +22,13 @@ try:
 except FileNotFoundError:
     _SHARED = {}
 INTEGRATION_CONFIG = _SHARED.get("integration_config", {})
-print(f"Loaded integration_config: {INTEGRATION_CONFIG}")
+logging.info(f"Loaded integration_config: {INTEGRATION_CONFIG}")
 
 
-def generate_genric_task_context(task_context_input: TaskContent) -> TaskContext:
+@observe(as_type="generation")
+def generate_genric_task_context(
+    task_context_input: TaskContent, session_id: str
+) -> TaskContext:
     """
     Summarize the task context into a string
     Args:
@@ -81,7 +89,6 @@ You are a Task Context Agent. Your primary function is to analyze a provided tas
 4.  Does it seem like a request? Yes, context implies action needed. So, "Task Request:".
 5.  Any PII? Yes, "user_email: john.doe@example.com". EXCLUDE THIS.
 6.  Construct summary: "Task Request: Update website homepage for the Marketing Department, Web Team."
-
 """
 
     resp = client.models.generate_content(
@@ -90,14 +97,31 @@ You are a Task Context Agent. Your primary function is to analyze a provided tas
         config={
             "response_mime_type": "application/json",
             "response_schema": TaskContext,
+            "thinking_config": types.ThinkingConfig(
+                thinking_budget=0,
+            ),
         },
     )
-    logging.debug(f"gemini response: {resp.model_dump_json()}")
+    logging.debug(
+        f"langyuse debug: input_tokens: {resp.usage_metadata.prompt_token_count}, output_tokens: {resp.usage_metadata.candidates_token_count}, total_tokens: {resp.usage_metadata.total_token_count}"
+    )
+    langfuse_context.update_current_observation(
+        input=PROMPT,
+        model=MODEL,
+        session_id=session_id,
+        name="generate_genric_task_context",
+        usage={
+            "input": resp.usage_metadata.prompt_token_count,
+            "output": resp.usage_metadata.candidates_token_count,
+            "total_tokens": resp.usage_metadata.total_token_count,
+        },
+    )
     return resp.parsed
 
 
+@observe()
 def generate_routing_agent_context(
-    task_content: TaskContent, task_context: TaskContext
+    task_content: TaskContent, task_context: TaskContext, session_id: str
 ) -> RoutingAgentContext:
     """
     Determine which agent should handle the task based on the task context.
@@ -143,10 +167,23 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
                 contents=priority_prompt,
                 config={
                     "response_mime_type": "application/json",
-                    "response_schema": RoutingAgentContext,
+                    "response_schema": TaskContext,
+                    "thinking_config": types.ThinkingConfig(
+                        thinking_budget=0,
+                    ),
                 },
             )
-            logging.debug(f"gemini response: {resp.model_dump_json()}")
+            langfuse_context.update_current_observation(
+                input=priority_prompt,
+                model=MODEL,
+                session_id=session_id,
+                name="routing_agent_static",
+                usage={
+                    "input": resp.usage_metadata.prompt_token_count,
+                    "output": resp.usage_metadata.candidates_token_count,
+                    "total_tokens": resp.usage_metadata.total_token_count,
+                },
+            )
             return resp.parsed
 
         elif cfg["mode"] == "infer":
@@ -158,15 +195,28 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
             resp = client.models.generate_content(
                 model=MODEL,
                 contents=prompt,
+                session_id=session_id,
                 config={
                     "response_mime_type": "application/json",
-                    "response_schema": RoutingAgentContext,
+                    "response_schema": TaskContext,
+                    "thinking_config": types.ThinkingConfig(
+                        thinking_budget=0,
+                    ),
                 },
             )
-            logging.debug(f"gemini response: {resp.model_dump_json()}")
+            langfuse_context.update_current_observation(
+                input=prompt,
+                model=MODEL,
+                session_id=session_id,
+                name="routing_agent_infer",
+                usage={
+                    "input": resp.usage_metadata.prompt_token_count,
+                    "output": resp.usage_metadata.candidates_token_count,
+                    "total_tokens": resp.usage_metadata.total_token_count,
+                },
+            )
             return resp.parsed
 
-    # fallback
     return RoutingAgentContext(
         target_agent="unsupported",
         agent_tags=[],

@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
 from enum import Enum
+from typing import List, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, Field
+
 
 class PersonContextInput(BaseModel):
     # org_id: Optional[str] = ""
@@ -32,15 +34,11 @@ class EmailContentInput(BaseModel):
     request_id: UUID = Field(
         description="request uuid",
     )
-    request_inqueue_type: str = Field(
-        description="request inqueue type"
-        )
+    request_inqueue_type: str = Field(description="request inqueue type")
     request_inqueue_details: str = Field(
         description="email that received the request",
     )
-    requestor_email: str = Field(
-        description="email of the requestor"
-    )
+    requestor_email: str = Field(description="email of the requestor")
     request_subject: str = Field(
         description="subject of the email request",
     )
@@ -49,11 +47,12 @@ class EmailContentInput(BaseModel):
     )
     integration_source: str = Field(
         description="integration source",
-        examples = ["gmail.wfcrdata", "gmail.policy"],
+        examples=["gmail.wfcrdata", "gmail.policy"],
     )
     attachments: List[dict] = Field(
         description="attachments of the email request",
     )
+
 
 class TaskContent(BaseModel):
     email_content: EmailContentInput = Field(
@@ -62,6 +61,7 @@ class TaskContent(BaseModel):
     person_context: PersonContextInput = Field(
         description="Contains the person context of the requestor",
     )
+
 
 class TaskContext(BaseModel):
     request_micro_summary: str = Field(
@@ -85,30 +85,37 @@ class TaskContext(BaseModel):
         description="parsed attachments of the email request",
     )
 
+
 class Agents(str, Enum):
     """
     Enum for the agents
     """
+
     DATA_AGENT = "data_agent"
     CSA_AGENT = "csa_agent"
     UNSUPPORTED = "unsupported"
+
 
 class Priority(str, Enum):
     """
     Enum for the priority
     """
+
     VERY_HIGH = "very_high"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
+
 
 class RoutingAgentContext(BaseModel):
     target_agent: Agents = Agents.UNSUPPORTED
     agent_tags: List[str] = Field(default_factory=list)
     priority: Priority = Priority.LOW
 
+
 class ContextAgentResponse(RoutingAgentContext, TaskContext):
     """
     ContextAgentResponse Schema
     """
+
     pass

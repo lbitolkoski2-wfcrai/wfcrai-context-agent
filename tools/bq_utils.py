@@ -1,13 +1,17 @@
 # from google.cloud import bigquery
-from constants import GCP_PROJECT, GCP_LOCATION
-from google.cloud import bigquery
-# from agent_utils.connectors import BigQueryConnector
-
 import logging
 
-from schemas.context_agent_schema import PersonContextInput, EmailContentInput
+from google.cloud import bigquery
+
+from constants import GCP_LOCATION, GCP_PROJECT
+from schemas.context_agent_schema import EmailContentInput, PersonContextInput
+
+# from agent_utils.connectors import BigQueryConnector
+
+
 
 bq_client = bigquery.Client()
+
 
 def get_sender_context(requestor_email: str) -> PersonContextInput:
     """
