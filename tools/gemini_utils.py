@@ -119,7 +119,7 @@ You are a Task Context Agent. Your primary function is to analyze a provided tas
     return resp.parsed
 
 
-@observe()
+@observe(as_type="generation")
 def generate_routing_agent_context(
     task_content: TaskContent, task_context: TaskContext, session_id: str
 ) -> RoutingAgentContext:
@@ -195,7 +195,6 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
             resp = client.models.generate_content(
                 model=MODEL,
                 contents=prompt,
-                session_id=session_id,
                 config={
                     "response_mime_type": "application/json",
                     "response_schema": TaskContext,
