@@ -167,7 +167,7 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
                 contents=priority_prompt,
                 config={
                     "response_mime_type": "application/json",
-                    "response_schema": TaskContext,
+                    "response_schema": RoutingAgentContext,
                     "thinking_config": types.ThinkingConfig(
                         thinking_budget=0,
                     ),
@@ -197,7 +197,7 @@ You are a Task Priority Agent. Your goal is to assign a priority to a task based
                 contents=prompt,
                 config={
                     "response_mime_type": "application/json",
-                    "response_schema": TaskContext,
+                    "response_schema": RoutingAgentContext,
                     "thinking_config": types.ThinkingConfig(
                         thinking_budget=0,
                     ),
