@@ -9,7 +9,6 @@ from schemas.context_agent_schema import EmailContentInput, PersonContextInput
 # from agent_utils.connectors import BigQueryConnector
 
 
-
 bq_client = bigquery.Client()
 
 
