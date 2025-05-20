@@ -29,3 +29,7 @@ agent = "data_agent"
 [integration_config."gmail.policy"]
 mode  = "fixed"
 agent = "policy_agent"
+
+[integration_config."gmail.csa"]
+mode  = "fixed"
+agent = "csa_agent"

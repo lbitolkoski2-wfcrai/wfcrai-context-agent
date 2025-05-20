@@ -128,96 +128,61 @@ def generate_routing_agent_context(
     """
     src = task_content.email_content.integration_source
     cfg = INTEGRATION_CONFIG.get(src)
-    if cfg:
-        logging.info(f"Routing agent | integration config: {cfg}")
-        if cfg["mode"] == "fixed":
-            target = cfg["agent"]
-            priority_prompt = f"""
-You are a Task Priority Agent. Your goal is to assign a priority to a task based on its context.
+    if not cfg:
+        return RoutingAgentContext(
+            target_agent="unsupported", agent_tags=[], priority="low"
+        )
 
-**Input Context:**
-* You will receive task details in a structured format (derived from `{task_context.model_dump()}`).
-* The task is intended for agent: '{target}'. (Note: This information is for context only and does not directly alter the priority assignment rules below, unless the task description itself ties the target agent to urgency/impact).
+    logging.info(f"Routing agent | integration config: {cfg}")
 
-**Priority Levels:** `very_high`, `high`, `medium`, `low`
+    DEFAULT_PROMPT = """
+    You are a Task Priority Agent. Your goal is to assign a priority to a task based on its context.
 
-**Priority Assignment Rules (apply in order):**
+    **Input Context:**
+    * You will receive task details in a structured format (derived from `{task_context}`).
+    * The task is intended for agent: '{target}'.
 
-1.  **Non-Task Content:**
-    * If the input context appears to be purely informational (e.g., a log entry, a comment without a clear action, a general statement) and not a direct, actionable task:
-        * Set `priority` to `low`.
+    **Priority Levels:** `very_high`, `high`, `medium`, `low`
 
-2.  **Senior Management Involvement:**
-    * Check the task context for information about the requester or key stakeholders (e.g., look for fields like `requester_role`, `user_title`, `stakeholder_level`).
-    * If a key person involved is identified as senior management (e.g., terms like "CEO", "VP", "Director", "Head of Department", "President", "C-level"):
-        * Set `priority` to `high`.
-        * Consider changing to `very_high` ONLY if the task context ALSO explicitly states or strongly implies critical urgency (e.g., "system down," "urgent," "deadline critical") or major business impact.
-    * If no clear indication of senior management involvement: Proceed to rule 3.
+    **Rules (in order):**
+    1. If purely informational with no enquiry asked → `low`
+    2. Senior management involved → `high` (or `very_high` if explicitly urgent)
+    3. Otherwise → `medium` (or `low` if minor)"""
 
-3.  **Default Priority:**
-    * For all other actionable tasks not meeting the criteria above:
-        * Set `priority` to `medium`.
-        * Consider changing to `low` if the task seems minor, routine, or has no implied urgency or impact.
+    # build the prompt based on mode
+    if cfg.get("mode") == "fixed":
+        prompt = DEFAULT_PROMPT.format(
+            task_context=task_context.model_dump(), target=cfg["agent"]
+        )
+    else:
+        prompt_template = cfg.get("prompt", "")
+        prompt = prompt_template.format(
+            task_content_dump=task_content.model_dump(),
+            task_context_dump=task_context.model_dump(),
+        )
 
-**Important:**
-* Base your decisions SOLELY on the provided task context. Do not make assumptions beyond the given information.
-"""
-            resp = client.models.generate_content(
-                model=MODEL,
-                contents=priority_prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": RoutingAgentContext,
-                    "thinking_config": types.ThinkingConfig(
-                        thinking_budget=0,
-                    ),
-                },
-            )
-            langfuse_context.update_current_observation(
-                input=priority_prompt,
-                model=MODEL,
-                session_id=session_id,
-                name="routing_agent_static",
-                usage={
-                    "input": resp.usage_metadata.prompt_token_count,
-                    "output": resp.usage_metadata.candidates_token_count,
-                    "total_tokens": resp.usage_metadata.total_token_count,
-                },
-            )
-            return resp.parsed
-
-        elif cfg["mode"] == "infer":
-            tmpl = cfg.get("prompt", "")
-            prompt = tmpl.format(
-                task_content_dump=task_content.model_dump(),
-                task_context_dump=task_context.model_dump(),
-            )
-            resp = client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": RoutingAgentContext,
-                    "thinking_config": types.ThinkingConfig(
-                        thinking_budget=0,
-                    ),
-                },
-            )
-            langfuse_context.update_current_observation(
-                input=prompt,
-                model=MODEL,
-                session_id=session_id,
-                name="routing_agent_infer",
-                usage={
-                    "input": resp.usage_metadata.prompt_token_count,
-                    "output": resp.usage_metadata.candidates_token_count,
-                    "total_tokens": resp.usage_metadata.total_token_count,
-                },
-            )
-            return resp.parsed
-
-    return RoutingAgentContext(
-        target_agent="unsupported",
-        agent_tags=[],
-        priority="low",
+    # single generate_content call
+    resp = client.models.generate_content(
+        model=MODEL,
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_schema": RoutingAgentContext,
+            "thinking_config": types.ThinkingConfig(thinking_budget=0),
+        },
     )
+
+    # record usage
+    langfuse_context.update_current_observation(
+        input=prompt,
+        model=MODEL,
+        session_id=session_id,
+        name="routing_agent_context",
+        usage={
+            "input": resp.usage_metadata.prompt_token_count,
+            "output": resp.usage_metadata.candidates_token_count,
+            "total_tokens": resp.usage_metadata.total_token_count,
+        },
+    )
+
+    return resp.parsed
