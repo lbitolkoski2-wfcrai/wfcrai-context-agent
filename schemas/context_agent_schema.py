@@ -91,9 +91,22 @@ class Agents(str, Enum):
     Enum for the agents
     """
 
-    DATA_AGENT = "data_agent"
-    CSA_AGENT = "csa_agent"
-    UNSUPPORTED = "unsupported"
+    DATA_AGENT = Field(
+        description="Responsible for handling data-related tasks",
+        default="data_agent",
+    )
+    CSA_AGENT = Field(
+        description="Responsible for handling CSA related tasks",
+        default="csa_agent",
+    )
+    POLICY_AGENT = Field(
+        description="Responsible for handling policy-related tasks",
+        default="policy_agent",
+    )
+    UNSUPPORTED = Field(
+        description="Placeholder agent for unsupported requests",
+        default="unsupported",
+    )
 
 
 class Priority(str, Enum):
