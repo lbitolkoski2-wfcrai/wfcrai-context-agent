@@ -178,3 +178,5 @@ cython_debug/
 uv.lock
 *.whl
 config/bundled.toml
+
+dev.py
