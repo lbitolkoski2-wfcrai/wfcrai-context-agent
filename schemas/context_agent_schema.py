@@ -88,32 +88,22 @@ class TaskContext(BaseModel):
 
 class Agents(str, Enum):
     """
-    Enum for the agents
+    Enum for the agents:
+    - DATA_AGENT: Agent to handle data requests
+    - CSA_AGENT: Agent to handle requests to csa@woolworths.com.au  
+    - POLICY_AGENT: Agent to handle reqeusts to policy@woolworths.com.au
+    - UNSUPPORTED: Placeholder for unsupported requests
     """
-
-    DATA_AGENT = Field(
-        description="Responsible for handling data-related tasks",
-        default="data_agent",
-    )
-    CSA_AGENT = Field(
-        description="Responsible for handling CSA related tasks",
-        default="csa_agent",
-    )
-    POLICY_AGENT = Field(
-        description="Responsible for handling policy-related tasks",
-        default="policy_agent",
-    )
-    UNSUPPORTED = Field(
-        description="Placeholder agent for unsupported requests",
-        default="unsupported",
-    )
+    DATA_AGENT   = "data_agent"
+    CSA_AGENT    = "csa_agent" 
+    POLICY_AGENT = "policy_agent"
+    UNSUPPORTED  = "unsupported"
 
 
 class Priority(str, Enum):
     """
     Enum for the priority
     """
-
     VERY_HIGH = "very_high"
     HIGH = "high"
     MEDIUM = "medium"
@@ -121,7 +111,7 @@ class Priority(str, Enum):
 
 
 class RoutingAgentContext(BaseModel):
-    target_agent: Agents = Agents.UNSUPPORTED
+    target_agent: Agents = "unsupported"
     agent_tags: List[str] = Field(default_factory=list)
     priority: Priority = Priority.LOW
 
