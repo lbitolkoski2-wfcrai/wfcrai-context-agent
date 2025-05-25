@@ -28,7 +28,19 @@ def get_sender_context(requestor_email: str) -> PersonContextInput:
     #     }
     # }
     # bq_connector = BigQueryConnector(config=config)
-    query = f"SELECT * FROM test.person_context WHERE employee_corporate_email = '{requestor_email}'"
+    query = f"""
+        SELECT
+            employee_corporate_email,
+            area,
+            region,
+            ops_or_support,
+            CAST(area_count AS STRING) AS area_count,
+            department_context
+        FROM
+            test.person_context
+        WHERE
+            employee_corporate_email = '{requestor_email}'
+    """
     try:
         result = bq_client.query_and_wait(query)
         rows = [dict(row) for row in result]

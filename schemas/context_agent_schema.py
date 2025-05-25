@@ -23,7 +23,7 @@ class PersonContextInput(BaseModel):
         description="department context of the requestor in",
         default="",
     )
-    area_count: Optional[int] = Field(
+    area_count: Optional[str] = Field(
         description="count of the people of the area",
         default="",
     )
