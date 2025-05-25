@@ -1,5 +1,5 @@
 name: Build and Push to GAR - Context Agent
-run-name: "Building tag: ${{ github.event.inputs.image_tag }} on ${{ github.ref_name }}"
+run-name: "Building tag: ${{ github.event.inputs.image_tag }}, branch: ${{ github.ref_name }}"
 
 on:
   workflow_dispatch:
@@ -78,7 +78,10 @@ jobs:
           BRANCH_TAG=$(echo "${GITHUB_REF#refs/heads/}" | tr '[:upper:]' '[:lower:]' | sed 's#[/ ]#-_#g')
           SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           echo "## Docker Image Tags" >> $GITHUB_STEP_SUMMARY
-          echo "- Input Tag: $IMAGE:${{ github.event.inputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Latest Tag: $IMAGE:latest" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch Tag: $IMAGE:$BRANCH_TAG" >> $GITHUB_STEP_SUMMARY
-          echo "- Short SHA Tag: $IMAGE:$SHORT_SHA" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY # Add an empty line for better spacing
+          echo "| Tag Type    | Image URI                                                                 |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|---------------------------------------------------------------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Input Tag   | \`$IMAGE:${{ github.event.inputs.image_tag }}\`                             |" >> $GITHUB_STEP_SUMMARY
+          echo "| Latest Tag  | \`$IMAGE:latest\`                                                         |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch Tag  | \`$IMAGE:$BRANCH_TAG\`                                                    |" >> $GITHUB_STEP_SUMMARY
+          echo "| Short SHA Tag | \`$IMAGE:$SHORT_SHA\`                                                     |" >> $GITHUB_STEP_SUMMARY

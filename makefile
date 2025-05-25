@@ -40,7 +40,10 @@ push: build
 	@echo "Pushing the Docker image to Artifact Registry..."
 	@docker push $(ARTIFACT_REGISTRY)/$(DOCKER_IMAGE)
 
+# Path to your ADC JSON for GAR auth
 .PHONY: build # Build the docker image
 build:
 	@echo "Building Docker image locally as $(DOCKER_IMAGE)..."
-	@docker build . -t $(DOCKER_IMAGE)
+	@DOCKER_BUILDKIT=1 docker build \
+		--secret id=adc,src="$(HOME)/.config/gcloud/application_default_credentials.json" \
+		-t $(DOCKER_IMAGE) .

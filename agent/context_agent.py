@@ -1,10 +1,13 @@
-from agent_utils.connectors import ConfluenceConnector, BigQueryConnector, LLMConnector, GoogleCloudStorageConnector
 from agent_utils.components.assistant import Assistant
+from agent_utils.connectors import (BigQueryConnector, ConfluenceConnector,
+                                    GoogleCloudStorageConnector, LLMConnector)
 from langgraph.graph import StateGraph
-import schemas.context_agent_schema as context_agent_schema
 
+import schemas.context_agent_schema as context_agent_schema
 from agent.nodes.org_context import OrgContext
+
 # from langfuse.decorators import observe
+
 
 class ContextAgent:
     """
@@ -14,13 +17,13 @@ class ContextAgent:
 
     def __init__(self):
         self.load_connectors()
-        self.config = self.gcs_connector.load_toml("context-agent/config/bundled.toml")     
-        self.assistant = Assistant(self.llm_connector, self.config) 
+        self.config = self.gcs_connector.load_toml("context-agent/config/bundled.toml")
+        self.assistant = Assistant(self.llm_connector, self.config)
         pass
 
     def load_connectors(self):
         self.gcs_connector = GoogleCloudStorageConnector()
-        self.config = self.gcs_connector.load_toml()        
+        self.config = self.gcs_connector.load_toml()
         self.bq_connector = BigQueryConnector(self.config)
         self.confluence_connector = ConfluenceConnector(self.config)
         self.llm_connector = LLMConnector(self.config, "openai")
